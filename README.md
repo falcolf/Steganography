@@ -1,11 +1,11 @@
 # Steganography
 Hiding of Textual information into image using LSB Technique ( modified )
 
-##Usage
+## Usage
   Stegano.py encode -i <input> -o <output> -k <key> -f <file>
   Stegano.py decode -i <input> -o <output> -k <key>
 
-###Options:
+##### Options:
   -h, --help                Show this help
   --version                 Show the version
   -f,--file=<file>          File to hide
