@@ -26,35 +26,51 @@ class Stegano():
 	def __init__(self,im,key):
 		self.im = im
 		self.key = key
+		self.gen_key_list()
+		self.keyptr = 0
 		self.height, self.width, self.channels = im.shape
 		self.size = self.height*self.width
-		self.capacity = (self.height-1) * self.width # row 0 for saving meta data.
+		self.capacity = (self.height-1) * self.width 							# row 0 for saving meta data.
 
 		#current values
 		self.row = 0
 		self.col = 0
-		self.chan = 0 # 0 red : 1 green : 2 blue
+		self.chan = 0 															# 0 red : 1 green : 2 blue
 
-	def get_binary_value(self,val,bitsize): #returns binary value of any value according to required number of bits
+	def gen_key_list(self): 													# function converts key into list with bit values.
+		self.keyl=[]
+		for c in self.key:
+			bin_c = self.get_binary_value(ord(c),8)
+			bin_c_list = list(bin_c)
+			self.keyl+=bin_c_list
+
+	def next_key_bits(self): 													# function to get the next three bits for calculating next slot val
+		self.key_nbits = [] 													# contains next three bits
+		for i in range(3):
+			bit_val = self.keyl.pop(0)
+			self.key_nbits.append(bit_val)
+			self.keyl.append(bit_val)
+
+	def get_binary_value(self,val,bitsize): 									# returns binary value of any value according to required number of bits
 		binval = bin(val)[2:]
 		while len(binval)<bitsize:
 			binval = '0'+binval
 		return binval
 
-	def get_modified_lsb(self,s,lsb): #helper function to modify the last bit in any string s to lsb PS required as strings are immutable
+	def get_modified_lsb(self,s,lsb): 											# helper function to modify the last bit in any string s to lsb PS required as strings are immutable
 		lst = list(s)
 		lst[-1] = lsb
 		s = "".join(lst)
 		return s
 
-	def store_meta_data(self,l): #stores length in first row of the image. Length is stroed in 64 bit format.
+	def store_meta_data(self,l): 												# stores length in first row of the image. Length is stroed in 64 bit format.
 		bin_len = self.get_binary_value(l,64) 
 		for ptr in range(64):
-			chans = list(self.im[0,ptr]) #chans now contains the three channel values as list
-			bin_red_chan = self.get_binary_value(chans[0],8) # contains binary value for red channel ie 0th channel
-			bin_red_chan_mod = self.get_modified_lsb(bin_red_chan,bin_len[ptr]) #contains modified value for red channel
-			chans[0] = int(bin_red_chan_mod,2) #converts binary to decimal and stores modified value into channel list
-			self.im[0,ptr] = tuple(chans) # updates image with modified values
+			chans = list(self.im[0,ptr]) 										# chans now contains the three channel values as list
+			bin_red_chan = self.get_binary_value(chans[0],8) 					# contains binary value for red channel ie 0th channel
+			bin_red_chan_mod = self.get_modified_lsb(bin_red_chan,bin_len[ptr]) # contains modified value for red channel
+			chans[0] = int(bin_red_chan_mod,2) 									# converts binary to decimal and stores modified value into channel list
+			self.im[0,ptr] = tuple(chans) 										# updates image with modified values
 		print('meta data stored')
 
 	def extract_meta_data(self):
@@ -70,6 +86,10 @@ class Stegano():
 		l = len(data)
 		print('length of data stored is ' + str(l))
 		self.store_meta_data(l)
+		print(self.keyl)
+		for i in range(11):
+			self.next_key_bits()
+			print(self.key_nbits)
 		return self.im
 
 	def decode_data(self):
