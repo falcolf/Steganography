@@ -151,11 +151,15 @@ class Stegano():
 
 	def store_data(self,data):
 		data_len = len(data)
+		next_space = 0
 		for l in range(data_len):
+			if next_space == 1:
+				next_space = 0
+				continue
 			if l<data_len-1: 													# not the last charachter...so check next space value
-				next_space=0
 				if data[l+1] == 32: 											# checks if next byte is for space
 					next_space = 1
+					l+=1
 				self.hide_bits(self.get_binary_value(data[l],8),next_space)
 			else:
 				self.hide_bits(self.get_binary_value(data[l],8),0)
